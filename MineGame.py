@@ -26,7 +26,7 @@ def save_player_usd(usd):
             json.dump({"usd": usd}, file)
     except IOError as e:
         print(f"Erreur lors de l'écriture dans le fichier JSON : {e}")
-
+# adasdawdggafaa
 player_usd = load_player_usd()
 
 screen = pygame.display.set_mode((window_width, window_height))
