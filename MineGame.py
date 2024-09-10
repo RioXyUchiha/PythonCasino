@@ -4,68 +4,67 @@ import sys
 import json
 import os
 import random
-import websockets
 
 pygame.init()
 
 # Variables
 screen_info = pygame.display.Info()
-SCREEN_WIDTH, SCREEN_HEIGHT = screen_info.current_w, screen_info.current_h
-WINDOW_WIDTH, WINDOW_HEIGHT = int(SCREEN_WIDTH / 1.1), int(SCREEN_HEIGHT / 1.1)
-GRID_SIZE, CELL_SIZE, CELL_MARGIN = 5, 80, 10
-GRID_WIDTH = GRID_SIZE * (CELL_SIZE + CELL_MARGIN) - CELL_MARGIN
-GRID_HEIGHT = GRID_SIZE * (CELL_SIZE + CELL_MARGIN) - CELL_MARGIN
-JSON_FILE_PATH = "player_data.json"
-IMAGES_DIR = "Images"
+screen_width, screen_height = screen_info.current_w, screen_info.current_h
+window_width, window_height = int(screen_width / 1.1), int(screen_height / 1.1)
+grid_size, cell_size, cell_margin = 5, 80, 10
+grid_width = grid_size * (cell_size + cell_margin) - cell_margin
+grid_height = grid_size * (cell_size + cell_margin) - cell_margin
+json_file_path = "player_data.json"
+images_dir = "Images"
 
 # Couleurs
-WHITE = pygame.Color('white')
-GRAY = pygame.Color('gray20')
-GRAY_DARK = pygame.Color('gray30')
-RED = pygame.Color('red')
-YELLOW = pygame.Color('yellow')
-BLACK = pygame.Color('black')
+white = pygame.Color('white')
+gray = pygame.Color('gray20')
+gray_dark = pygame.Color('gray30')
+red = pygame.Color('red')
+yellow = pygame.Color('yellow')
+black = pygame.Color('black')
 
-# Chargement des images
+# Charge les images
 def load_images():
     images = {
-        "star": pygame.transform.smoothscale(pygame.image.load(os.path.join(IMAGES_DIR, "star.png")), (CELL_SIZE // 1.5, CELL_SIZE // 1.5)),
-        "bomb": pygame.transform.smoothscale(pygame.image.load(os.path.join(IMAGES_DIR, "bomb.png")), (CELL_SIZE // 1.5, CELL_SIZE // 1.5)),
-        "saturn": pygame.transform.smoothscale(pygame.image.load(os.path.join(IMAGES_DIR, "saturn.png")), (CELL_SIZE // 1.5, CELL_SIZE // 1.5)),
+        "star": pygame.transform.smoothscale(pygame.image.load(os.path.join(images_dir, "star.png")), (cell_size // 1.5, cell_size // 1.5)),
+        "bomb": pygame.transform.smoothscale(pygame.image.load(os.path.join(images_dir, "bomb.png")), (cell_size // 1.5, cell_size // 1.5)),
+        "saturn": pygame.transform.smoothscale(pygame.image.load(os.path.join(images_dir, "saturn.png")), (cell_size // 1.5, cell_size // 1.5)),
     }
     return images
 
-# Chargement de l'argent du joueur depuis le fichier JSON
+# Charge l'argent du joueur
 def load_player_usd():
-    if os.path.exists(JSON_FILE_PATH):
+    if os.path.exists(json_file_path):
         try:
-            with open(JSON_FILE_PATH, "r") as file:
+            with open(json_file_path, "r") as file:
                 usd = json.load(file).get("usd", 0)
                 return round(usd, 2)  # Arrondi à deux décimales
         except (json.JSONDecodeError, IOError) as e:
             print(f"Error loading JSON: {e}")
     return 0
 
-# Sauvegarde de l'argent du joueur dans le fichier JSON
+# Sauvegarde l'argent du joueur
 def save_player_usd(usd):
     try:
-        with open(JSON_FILE_PATH, "w") as file:
+        with open(json_file_path, "w") as file:
             json.dump({"usd": round(usd, 2)}, file)  # Arrondi à deux décimales
     except IOError as e:
         print(f"Error saving JSON: {e}")
 
 # Initialisation de la grille de jeu
 def initialize_grid():
-    grid = [[0] * GRID_SIZE for _ in range(GRID_SIZE)]
-    bomb_pos = (random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1))
+    grid = [[0] * grid_size for _ in range(grid_size)]
+    bomb_pos = (random.randint(0, grid_size - 1), random.randint(0, grid_size - 1))
     grid[bomb_pos[0]][bomb_pos[1]] = -1  # Placement d'une bombe
     return grid
 
-# Dessin de la grille
-def draw_grid(screen, grid, revealed_cells, images, grid_x, grid_y):
-    for row in range(GRID_SIZE):
-        for col in range(GRID_SIZE):
-            rect = pygame.Rect(grid_x + col * (CELL_SIZE + CELL_MARGIN), grid_y + row * (CELL_SIZE + CELL_MARGIN), CELL_SIZE, CELL_SIZE)
+# Création de la grille
+def create_grid(screen, grid, revealed_cells, images, grid_x, grid_y):
+    for row in range(grid_size):
+        for col in range(grid_size):
+            rect = pygame.Rect(grid_x + col * (cell_size + cell_margin), grid_y + row * (cell_size + cell_margin), cell_size, cell_size)
             if (row, col) in revealed_cells:
                 if grid[row][col] == -1:
                     pygame.draw.rect(screen, "tomato2", rect) 
@@ -79,15 +78,15 @@ def draw_grid(screen, grid, revealed_cells, images, grid_x, grid_y):
             image_rect = image.get_rect(center=rect.center)
             screen.blit(image, image_rect.topleft)
 
-# Dessin du texte
-def draw_text(screen, text, font, color, x, y):
+# Créer un texte
+def create_text(screen, text, font, color, x, y):
     text_surface = font.render(text, True, color)
     screen.blit(text_surface, (x, y))
 
-# Dessin du texte du multiplicateur
-def draw_multiplier_text(screen, multiplier_text, pos):
+# Créer le texte de multiplicateur
+def create_multiplier_text(screen, multiplier_text, pos):
     font = pygame.font.SysFont(None, 36)  # Police plus grande pour la visibilité
-    text_surface = font.render(multiplier_text, True, WHITE)
+    text_surface = font.render(multiplier_text, True, white)
     text_rect = text_surface.get_rect(center=pos)
     screen.blit(text_surface, text_rect)
 
@@ -104,8 +103,8 @@ def main():
     cashout_value = 0
     multiplier_displays = []
 
-    # Affichage de la fenetre
-    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    # Affichage de la fenêtre
+    screen = pygame.display.set_mode((window_width, window_height))
     pygame.display.set_caption("Minesweeper")
     font = pygame.font.SysFont(None, 30)
     input_box = pygame.Rect(20, 50, 100, 30)
@@ -119,46 +118,46 @@ def main():
 
     clock = pygame.time.Clock()
 
-    FRAME_WIDTH = WINDOW_WIDTH // 1.5
-    FRAME_HEIGHT = WINDOW_HEIGHT // 1.5
-    FRAME_X = (WINDOW_WIDTH - FRAME_WIDTH) // 2
-    FRAME_Y = (WINDOW_HEIGHT - FRAME_HEIGHT) // 2
+    frame_width = window_width // 1.5
+    frame_height = window_height // 1.5
+    frame_x = (window_width - frame_width) // 2
+    frame_y = (window_height - frame_height) // 2
 
-    LEFT_PANEL_WIDTH = FRAME_WIDTH // 4
-    RIGHT_PANEL_WIDTH = FRAME_WIDTH - LEFT_PANEL_WIDTH
-    PANEL_HEIGHT = FRAME_HEIGHT - 40 
-    SEPARATION = 20
+    left_panel_width = frame_width // 4
+    right_panel_width = frame_width - left_panel_width
+    panel_height = frame_height - 40 
+    separation = 20
 
-    LEFT_PANEL_X = FRAME_X
-    LEFT_PANEL_Y = FRAME_Y
-    RIGHT_PANEL_X = LEFT_PANEL_X + LEFT_PANEL_WIDTH + SEPARATION
-    RIGHT_PANEL_Y = FRAME_Y
+    left_panel_x = frame_x
+    left_panel_y = frame_y
+    right_panel_x = left_panel_x + left_panel_width + separation
+    right_panel_y = frame_y
 
-    GRID_X = RIGHT_PANEL_X + (RIGHT_PANEL_WIDTH - GRID_WIDTH) // 2
-    GRID_Y = RIGHT_PANEL_Y + (PANEL_HEIGHT - GRID_HEIGHT) // 2
+    grid_x = right_panel_x + (right_panel_width - grid_width) // 2
+    grid_y = right_panel_y + (panel_height - grid_height) // 2
 
     while True:
-        screen.fill(GRAY_DARK)
+        screen.fill(gray_dark)
 
-        # Dessin des panneaux gauche et droit
-        pygame.draw.rect(screen, GRAY, (LEFT_PANEL_X, LEFT_PANEL_Y, LEFT_PANEL_WIDTH, PANEL_HEIGHT))
-        pygame.draw.rect(screen, GRAY, (RIGHT_PANEL_X, RIGHT_PANEL_Y, RIGHT_PANEL_WIDTH, PANEL_HEIGHT))
+        # Création des rectangles gauche et droite
+        pygame.draw.rect(screen, gray, (left_panel_x, left_panel_y, left_panel_width, panel_height))
+        pygame.draw.rect(screen, gray, (right_panel_x, right_panel_y, right_panel_width, panel_height))
 
         # Affichage de l'argent du joueur
         player_usd_text = f"{round(player_usd, 2):.2f} USD"
         player_usd_width, _ = font.size(player_usd_text)
-        player_usd_x = WINDOW_WIDTH // 2 - player_usd_width // 2
-        draw_text(screen, player_usd_text, font, WHITE, player_usd_x, 10)
+        player_usd_x = window_width // 2 - player_usd_width // 2
+        create_text(screen, player_usd_text, font, white, player_usd_x, 10)
 
-        # Dessin de la grille
-        draw_grid(screen, grid, revealed_cells, images, GRID_X, GRID_Y)
+        # Création de la grille
+        create_grid(screen, grid, revealed_cells, images, grid_x, grid_y)
 
         # Affichage du montant de la mise
-        draw_text(screen, "Bet Amount:", font, WHITE, LEFT_PANEL_X + 10, LEFT_PANEL_Y + 20)
+        create_text(screen, "Bet Amount:", font, white, left_panel_x + 10, left_panel_y + 20)
 
         # Positionnement de la boîte de saisie et du bouton de mise
-        input_box.topleft = (LEFT_PANEL_X + 10, LEFT_PANEL_Y + 50)
-        bet_button.topleft = (LEFT_PANEL_X + 10, LEFT_PANEL_Y + 100)
+        input_box.topleft = (left_panel_x + 10, left_panel_y + 50)
+        bet_button.topleft = (left_panel_x + 10, left_panel_y + 100)
 
         # Texte du bouton de mise et de retrait
         bet_text = "BET" if not game_started else "CASH OUT"
@@ -172,8 +171,8 @@ def main():
         bet_text_width, bet_text_height = font.size(bet_text)
         cashout_text_width, cashout_text_height = font.size(cashout_text)
 
-        draw_text(screen, bet_text, font, WHITE, bet_button.centerx - bet_text_width // 2, bet_button.centery - bet_text_height // 2 - 10)
-        draw_text(screen, cashout_text, font, WHITE, bet_button.centerx - cashout_text_width // 2, bet_button.centery + bet_text_height // 2 - 10)
+        create_text(screen, bet_text, font, white, bet_button.centerx - bet_text_width // 2, bet_button.centery - bet_text_height // 2 - 10)
+        create_text(screen, cashout_text, font, white, bet_button.centerx - cashout_text_width // 2, bet_button.centery + bet_text_height // 2 - 10)
 
         # Affichage du texte de mise
         txt_surface = font.render(text, True, color)
@@ -188,16 +187,16 @@ def main():
             cell_pos, multiplier_value, display_time = display
             if current_time - display_time < 1000:
                 row, col = cell_pos
-                cell_center = (GRID_X + col * (CELL_SIZE + CELL_MARGIN) + CELL_SIZE // 2, GRID_Y + row * (CELL_SIZE + CELL_MARGIN) + CELL_SIZE // 2)
-                draw_multiplier_text(screen, f"x{multiplier_value:.2f}", cell_center)
+                cell_center = (grid_x + col * (cell_size + cell_margin) + cell_size // 2, grid_y + row * (cell_size + cell_margin) + cell_size // 2)
+                create_multiplier_text(screen, f"x{multiplier_value:.2f}", cell_center)
             else:
                 multiplier_displays.remove(display)
 
         # Vérification de la fin de la partie
         if game_started:
-            all_non_bomb_cells_revealed = len(revealed_cells) == (GRID_SIZE * GRID_SIZE - 1)
+            all_non_bomb_cells_revealed = len(revealed_cells) == (grid_size * grid_size - 1)
             if all_non_bomb_cells_revealed:
-                revealed_cells = {(r, c) for r in range(GRID_SIZE) for c in range(GRID_SIZE)}
+                revealed_cells = {(r, c) for r in range(grid_size) for c in range(grid_size)}
                 player_usd += cashout_value
                 player_usd = round(player_usd, 2)
                 game_over = True
@@ -207,22 +206,28 @@ def main():
 
         # Gestion des événements
         for event in pygame.event.get():
+            # Quitte le jeu
             if event.type == pygame.QUIT:
                 save_player_usd(player_usd)
                 pygame.quit()
                 sys.exit()
+            
+            # Gestion des clics de la souris
             if event.type == pygame.MOUSEBUTTONDOWN:
+                # Gestion de la boîte de saisie pour le montant de la mise
                 if input_box.collidepoint(event.pos):
                     active = not active
                 else:
-                    active = False
+                    active = False 
                 color = color_active if active else color_inactive
 
+                # Gestion du bouton de mise
                 if bet_button.collidepoint(event.pos):
-                    if not game_started:
+                    if not game_started: 
                         try:
                             bet_amount = int(text)
-                            if bet_amount > 1 and bet_amount <= player_usd:
+                            # Vérifie que la mise est valide et que le joueur a suffisamment d'argent
+                            if bet_amount >= 1 and bet_amount <= player_usd:
                                 player_usd -= bet_amount
                                 player_usd = round(player_usd, 2)
                                 game_started = True
@@ -231,56 +236,58 @@ def main():
                                 grid = initialize_grid()
                                 game_over = False
                                 current_multiplier = 1.0
-                                cashout_value = round(bet_amount * current_multiplier, 2) 
+                                cashout_value = round(bet_amount * current_multiplier, 2)
                             else:
                                 print("Invalid bet amount.")
                         except ValueError:
-                            print("Please enter a valid number.")
-                    else:
-                        if game_started:
-                            player_usd += cashout_value 
-                            player_usd = round(player_usd, 2) 
-                            revealed_cells = {(r, c) for r in range(GRID_SIZE) for c in range(GRID_SIZE)}
-                            game_over = True
-                            game_started = False
-                            betting = False  
-                            multiplier_displays.clear()
+                            print("Please enter something.")
+                    else:  # Si le jeu a commencé
+                        player_usd += cashout_value
+                        player_usd = round(player_usd, 2) 
+                        revealed_cells = {(r, c) for r in range(grid_size) for c in range(grid_size)} # Révèle toutes les cellules pour terminer le jeu
+                        game_over = True
+                        game_started = False
+                        betting = False
+                        multiplier_displays.clear()
 
+            # Gestion des entrées du clavier
             if event.type == pygame.KEYDOWN:
                 if active:
                     if event.key == pygame.K_RETURN:
-                        active = False
+                        active = False 
                         color = color_inactive
                     elif event.key == pygame.K_BACKSPACE:
                         text = text[:-1]
                     else:
                         if event.unicode.isdigit():
-                            text += event.unicode
+                            text += event.unicode  # Ajoute le caractère saisi au texte
 
+            # Gestion des clics de la souris pour révéler les cellules
             if event.type == pygame.MOUSEBUTTONDOWN and game_started and not game_over:
                 x, y = event.pos
-                col = int((x - GRID_X) // (CELL_SIZE + CELL_MARGIN))
-                row = int((y - GRID_Y) // (CELL_SIZE + CELL_MARGIN))
+                col = int((x - grid_x) // (cell_size + cell_margin))  # Calcule la colonne de la cellule cliquée
+                row = int((y - grid_y) // (cell_size + cell_margin))  # Calcule la ligne de la cellule cliquée
 
-                if 0 <= row < GRID_SIZE and 0 <= col < GRID_SIZE:
+                # Vérifie que la cellule cliquée est dans les limites de la grille
+                if 0 <= row < grid_size and 0 <= col < grid_size:
                     if (row, col) not in revealed_cells:
-                        if grid[row][col] == -1:
-                            revealed_cells = {(r, c) for r in range(GRID_SIZE) for c in range(GRID_SIZE)}
+                        if grid[row][col] == -1:  # Si une bombe est trouvée
+                            revealed_cells = {(r, c) for r in range(grid_size) for c in range(grid_size)}  # Révèle toutes les cellules
                             game_over = True
                             game_started = False
-                            betting = False 
-                            multiplier_displays.clear() 
+                            betting = False
+                            multiplier_displays.clear()
                         else:
                             revealed_cells.add((row, col))
                             if current_multiplier == 1.0:
-                                current_multiplier = 1.09 
+                                current_multiplier = 1.05
                             else:
-                                increment = current_multiplier * 0.15 
+                                increment = current_multiplier * 0.1
                                 current_multiplier += increment
                             cashout_value = round(bet_amount * current_multiplier, 2)
                             multiplier_displays.append(((row, col), current_multiplier, pygame.time.get_ticks()))
 
-        pygame.display.flip()
-        clock.tick(30)
+            pygame.display.flip()
+            clock.tick(30)
 
 main()
