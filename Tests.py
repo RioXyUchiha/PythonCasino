@@ -26,7 +26,7 @@ RED = pygame.Color('red')
 YELLOW = pygame.Color('yellow')
 BLACK = pygame.Color('black')
 
-# Images
+# Chargement des images
 def load_images():
     images = {
         "star": pygame.transform.smoothscale(pygame.image.load(os.path.join(IMAGES_DIR, "star.png")), (CELL_SIZE // 1.5, CELL_SIZE // 1.5)),
@@ -35,29 +35,33 @@ def load_images():
     }
     return images
 
+# Chargement de l'argent du joueur depuis le fichier JSON
 def load_player_usd():
     if os.path.exists(JSON_FILE_PATH):
         try:
             with open(JSON_FILE_PATH, "r") as file:
                 usd = json.load(file).get("usd", 0)
-                return round(usd, 2)  # Round to two decimal places
+                return round(usd, 2)  # Arrondi à deux décimales
         except (json.JSONDecodeError, IOError) as e:
             print(f"Error loading JSON: {e}")
     return 0
 
+# Sauvegarde de l'argent du joueur dans le fichier JSON
 def save_player_usd(usd):
     try:
         with open(JSON_FILE_PATH, "w") as file:
-            json.dump({"usd": round(usd, 2)}, file)  # Round to two decimal places when saving
+            json.dump({"usd": round(usd, 2)}, file)  # Arrondi à deux décimales
     except IOError as e:
         print(f"Error saving JSON: {e}")
 
+# Initialisation de la grille de jeu
 def initialize_grid():
     grid = [[0] * GRID_SIZE for _ in range(GRID_SIZE)]
     bomb_pos = (random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1))
-    grid[bomb_pos[0]][bomb_pos[1]] = -1
+    grid[bomb_pos[0]][bomb_pos[1]] = -1  # Placement d'une bombe
     return grid
 
+# Dessin de la grille
 def draw_grid(screen, grid, revealed_cells, images, grid_x, grid_y):
     for row in range(GRID_SIZE):
         for col in range(GRID_SIZE):
@@ -75,16 +79,19 @@ def draw_grid(screen, grid, revealed_cells, images, grid_x, grid_y):
             image_rect = image.get_rect(center=rect.center)
             screen.blit(image, image_rect.topleft)
 
+# Dessin du texte
 def draw_text(screen, text, font, color, x, y):
     text_surface = font.render(text, True, color)
     screen.blit(text_surface, (x, y))
 
+# Dessin du texte du multiplicateur
 def draw_multiplier_text(screen, multiplier_text, pos):
-    font = pygame.font.SysFont(None, 36)  # Larger font for visibility
+    font = pygame.font.SysFont(None, 36)  # Police plus grande pour la visibilité
     text_surface = font.render(multiplier_text, True, WHITE)
     text_rect = text_surface.get_rect(center=pos)
     screen.blit(text_surface, text_rect)
 
+# Boucle principale du jeu
 def main():
     images = load_images()
     player_usd = load_player_usd()
@@ -95,8 +102,9 @@ def main():
     bet_amount = 0
     current_multiplier = 1.0
     cashout_value = 0
-    multiplier_displays = []  # Liste pour stocker plusieurs affichages de multiplicateur
+    multiplier_displays = []
 
+    # Affichage de la fenetre
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption("Minesweeper")
     font = pygame.font.SysFont(None, 30)
@@ -111,93 +119,93 @@ def main():
 
     clock = pygame.time.Clock()
 
-    # Dimensions et positions pour le cadre central
     FRAME_WIDTH = WINDOW_WIDTH // 1.5
     FRAME_HEIGHT = WINDOW_HEIGHT // 1.5
     FRAME_X = (WINDOW_WIDTH - FRAME_WIDTH) // 2
     FRAME_Y = (WINDOW_HEIGHT - FRAME_HEIGHT) // 2
 
-    # Dimensions et positions pour les deux rectangles à l'intérieur du cadre
     LEFT_PANEL_WIDTH = FRAME_WIDTH // 4
     RIGHT_PANEL_WIDTH = FRAME_WIDTH - LEFT_PANEL_WIDTH
-    PANEL_HEIGHT = FRAME_HEIGHT - 40  # Réduction de la hauteur des panneaux
-    SEPARATION = 20  # Séparation entre les deux panneaux
+    PANEL_HEIGHT = FRAME_HEIGHT - 40 
+    SEPARATION = 20
 
     LEFT_PANEL_X = FRAME_X
     LEFT_PANEL_Y = FRAME_Y
     RIGHT_PANEL_X = LEFT_PANEL_X + LEFT_PANEL_WIDTH + SEPARATION
     RIGHT_PANEL_Y = FRAME_Y
 
-    # Positions de la grille dans le panneau de droite
     GRID_X = RIGHT_PANEL_X + (RIGHT_PANEL_WIDTH - GRID_WIDTH) // 2
     GRID_Y = RIGHT_PANEL_Y + (PANEL_HEIGHT - GRID_HEIGHT) // 2
 
     while True:
         screen.fill(GRAY_DARK)
 
-        # Dessiner les deux rectangles séparés avec un espace entre eux
+        # Dessin des panneaux gauche et droit
         pygame.draw.rect(screen, GRAY, (LEFT_PANEL_X, LEFT_PANEL_Y, LEFT_PANEL_WIDTH, PANEL_HEIGHT))
         pygame.draw.rect(screen, GRAY, (RIGHT_PANEL_X, RIGHT_PANEL_Y, RIGHT_PANEL_WIDTH, PANEL_HEIGHT))
 
-        # Afficher le montant USD du joueur en haut au centre
+        # Affichage de l'argent du joueur
         player_usd_text = f"{round(player_usd, 2):.2f} USD"
         player_usd_width, _ = font.size(player_usd_text)
         player_usd_x = WINDOW_WIDTH // 2 - player_usd_width // 2
         draw_text(screen, player_usd_text, font, WHITE, player_usd_x, 10)
 
+        # Dessin de la grille
         draw_grid(screen, grid, revealed_cells, images, GRID_X, GRID_Y)
 
+        # Affichage du montant de la mise
         draw_text(screen, "Bet Amount:", font, WHITE, LEFT_PANEL_X + 10, LEFT_PANEL_Y + 20)
 
-        # Ajuster les positions des boutons et de la boîte d'entrée pour s'adapter à la nouvelle zone
+        # Positionnement de la boîte de saisie et du bouton de mise
         input_box.topleft = (LEFT_PANEL_X + 10, LEFT_PANEL_Y + 50)
         bet_button.topleft = (LEFT_PANEL_X + 10, LEFT_PANEL_Y + 100)
 
-        # Texte sur le bouton
+        # Texte du bouton de mise et de retrait
         bet_text = "BET" if not game_started else "CASH OUT"
-        cashout_text = f"{round(cashout_value, 2):.2f} USD" if game_started else text if text else "0.00 USD"
+        cashout_text = f"{round(cashout_value, 2):.2f} USD" if game_started else text if text else "0"
 
         bet_button.width = 270
         bet_button.height = 50
         pygame.draw.rect(screen, color_active if betting else color_inactive, bet_button)
 
-        # Centrer le texte sur le bouton
+        # Affichage des textes du bouton et du montant de retrait
         bet_text_width, bet_text_height = font.size(bet_text)
         cashout_text_width, cashout_text_height = font.size(cashout_text)
 
         draw_text(screen, bet_text, font, WHITE, bet_button.centerx - bet_text_width // 2, bet_button.centery - bet_text_height // 2 - 10)
         draw_text(screen, cashout_text, font, WHITE, bet_button.centerx - cashout_text_width // 2, bet_button.centery + bet_text_height // 2 - 10)
 
-        # Zone de texte pour entrer le montant de la mise
+        # Affichage du texte de mise
         txt_surface = font.render(text, True, color)
         width = max(270, txt_surface.get_width() + 10)
         input_box.width = width
         screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
         pygame.draw.rect(screen, color, input_box, 2)
 
-        # Afficher le texte du multiplicateur pour 1 seconde
+        # Affichage des multiplicateurs
         current_time = pygame.time.get_ticks()
         for display in multiplier_displays[:]:
             cell_pos, multiplier_value, display_time = display
-            if current_time - display_time < 1000:  # Show for 1 second
+            if current_time - display_time < 1000:
                 row, col = cell_pos
                 cell_center = (GRID_X + col * (CELL_SIZE + CELL_MARGIN) + CELL_SIZE // 2, GRID_Y + row * (CELL_SIZE + CELL_MARGIN) + CELL_SIZE // 2)
                 draw_multiplier_text(screen, f"x{multiplier_value:.2f}", cell_center)
             else:
-                multiplier_displays.remove(display)  # Remove after 1 second
+                multiplier_displays.remove(display)
 
+        # Vérification de la fin de la partie
         if game_started:
             all_non_bomb_cells_revealed = len(revealed_cells) == (GRID_SIZE * GRID_SIZE - 1)
             if all_non_bomb_cells_revealed:
-                # Reveal all cells if the game is won
                 revealed_cells = {(r, c) for r in range(GRID_SIZE) for c in range(GRID_SIZE)}
                 player_usd += cashout_value
-                player_usd = round(player_usd, 2)  # Round player USD after adding cashout
+                player_usd = round(player_usd, 2)
                 game_over = True
                 game_started = False
                 betting = False
-                multiplier_displays.clear()  # Clear multiplier texts when game is won
+                multiplier_displays.clear()
 
+        # Gestion des événements
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 save_player_usd(player_usd)
@@ -216,28 +224,27 @@ def main():
                             bet_amount = int(text)
                             if bet_amount > 1 and bet_amount <= player_usd:
                                 player_usd -= bet_amount
-                                player_usd = round(player_usd, 2)  # Round player USD after deduction
+                                player_usd = round(player_usd, 2)
                                 game_started = True
                                 betting = True
                                 revealed_cells.clear()
                                 grid = initialize_grid()
                                 game_over = False
                                 current_multiplier = 1.0
-                                cashout_value = round(bet_amount * current_multiplier, 2)  # Correctly rounded cashout value
+                                cashout_value = round(bet_amount * current_multiplier, 2) 
                             else:
                                 print("Invalid bet amount.")
                         except ValueError:
                             print("Please enter a valid number.")
                     else:
-                        # Fonctionnalité de retrait
                         if game_started:
-                            player_usd += cashout_value  # Ajouter la valeur de retrait au montant du joueur
-                            player_usd = round(player_usd, 2)  # Arrondir le montant du joueur après l'ajout
+                            player_usd += cashout_value 
+                            player_usd = round(player_usd, 2) 
                             revealed_cells = {(r, c) for r in range(GRID_SIZE) for c in range(GRID_SIZE)}
                             game_over = True
                             game_started = False
-                            betting = False  # Réinitialiser pour permettre un nouveau pari après la fin du jeu
-                            multiplier_displays.clear()  # Effacer les affichages des multiplicateurs lorsque le jeu est terminé
+                            betting = False  
+                            multiplier_displays.clear()
 
             if event.type == pygame.KEYDOWN:
                 if active:
@@ -252,8 +259,8 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONDOWN and game_started and not game_over:
                 x, y = event.pos
-                col = int((x - GRID_X) // (CELL_SIZE + CELL_MARGIN))  # Convertir en entier
-                row = int((y - GRID_Y) // (CELL_SIZE + CELL_MARGIN))  # Convertir en entier
+                col = int((x - GRID_X) // (CELL_SIZE + CELL_MARGIN))
+                row = int((y - GRID_Y) // (CELL_SIZE + CELL_MARGIN))
 
                 if 0 <= row < GRID_SIZE and 0 <= col < GRID_SIZE:
                     if (row, col) not in revealed_cells:
@@ -261,18 +268,16 @@ def main():
                             revealed_cells = {(r, c) for r in range(GRID_SIZE) for c in range(GRID_SIZE)}
                             game_over = True
                             game_started = False
-                            betting = False  # Réinitialiser pour permettre un nouveau pari après la fin du jeu
-                            multiplier_displays.clear()  # Effacer les affichages des multiplicateurs lorsque le joueur perd
+                            betting = False 
+                            multiplier_displays.clear() 
                         else:
                             revealed_cells.add((row, col))
-                            # Mettre à jour le multiplicateur avec une augmentation progressive
                             if current_multiplier == 1.0:
-                                current_multiplier = 1.09  # Premier incrément
+                                current_multiplier = 1.09 
                             else:
-                                increment = current_multiplier * 0.15  # Incrément progressif
+                                increment = current_multiplier * 0.15 
                                 current_multiplier += increment
                             cashout_value = round(bet_amount * current_multiplier, 2)
-                            # Ajouter le texte du multiplicateur à afficher pendant 1 seconde
                             multiplier_displays.append(((row, col), current_multiplier, pygame.time.get_ticks()))
 
         pygame.display.flip()
