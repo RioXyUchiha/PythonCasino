@@ -4,7 +4,6 @@ import threading
 host = '10.229.32.30'  
 port = 1234           
 
-# Initialisation du serveur
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((host, port))
 server.listen()

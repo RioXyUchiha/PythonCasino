@@ -155,7 +155,7 @@ def main():
 
         # Texte sur le bouton
         bet_text = "BET" if not game_started else "CASH OUT"
-        cashout_text = f"{round(cashout_value, 2):.2f} USD" if game_started else text if text else "0.00 USD"
+        cashout_text = f"{round(cashout_value, 2):.2f} USD" if game_started else text if text else "0"
 
         bet_button.width = 270
         bet_button.height = 50
