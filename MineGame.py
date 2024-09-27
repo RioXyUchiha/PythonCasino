@@ -19,7 +19,7 @@ grid_width = grid_size * (cell_size + cell_margin) - cell_margin
 grid_height = grid_size * (cell_size + cell_margin) - cell_margin
 json_file_path = "player_data.json"
 images_dir = "Images"
-bombs = 1
+bombs = 12
 
 # Couleurs
 white = pygame.Color('white')
@@ -60,9 +60,11 @@ def save_player_usd(usd):
 # Initialisation de la grille de jeu
 def initialize_grid():
     grid = [[0] * grid_size for _ in range(grid_size)]
-    bomb_pos = (random.randint(0, grid_size - 1), random.randint(0, grid_size - 1))
-
-    grid[bomb_pos[0]][bomb_pos[1]] = -1  # Placement d'une bombe
+    for _ in range(bombs):
+        bomb_pos = (random.randint(0, grid_size - 1), random.randint(0, grid_size - 1))
+        while grid[bomb_pos[0]][bomb_pos[1]] != -1:
+            grid[bomb_pos[0]][bomb_pos[1]] = -1  # Placement d'une bombe
+            bomb_pos = (random.randint(0, grid_size - 1), random.randint(0, grid_size - 1))
     
     return grid
 
