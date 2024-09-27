@@ -1,9 +1,12 @@
 # Librairies
+import pygame_widgets
 import pygame
 import sys
 import json
 import os
 import random
+
+from pygame_widgets.slider import Slider
 
 pygame.init()
 
@@ -16,6 +19,7 @@ grid_width = grid_size * (cell_size + cell_margin) - cell_margin
 grid_height = grid_size * (cell_size + cell_margin) - cell_margin
 json_file_path = "player_data.json"
 images_dir = "Images"
+bombs = 1
 
 # Couleurs
 white = pygame.Color('white')
@@ -57,7 +61,9 @@ def save_player_usd(usd):
 def initialize_grid():
     grid = [[0] * grid_size for _ in range(grid_size)]
     bomb_pos = (random.randint(0, grid_size - 1), random.randint(0, grid_size - 1))
+
     grid[bomb_pos[0]][bomb_pos[1]] = -1  # Placement d'une bombe
+    
     return grid
 
 # Création de la grille
@@ -85,39 +91,13 @@ def create_text(screen, text, font, color, x, y):
 
 # Créer le texte de multiplicateur
 def create_multiplier_text(screen, multiplier_text, pos):
-    font = pygame.font.SysFont(None, 36)  # Police plus grande pour la visibilité
+    font = pygame.font.SysFont(None, 36) 
     text_surface = font.render(multiplier_text, True, white)
     text_rect = text_surface.get_rect(center=pos)
     screen.blit(text_surface, text_rect)
 
 # Boucle principale du jeu
 def main():
-    images = load_images()
-    player_usd = load_player_usd()
-    grid = initialize_grid()
-    revealed_cells = set()
-    game_over = False
-    game_started = False
-    bet_amount = 0
-    current_multiplier = 1.0
-    cashout_value = 0
-    multiplier_displays = []
-
-    # Affichage de la fenêtre
-    screen = pygame.display.set_mode((window_width, window_height))
-    pygame.display.set_caption("Minesweeper")
-    font = pygame.font.SysFont(None, 30)
-    input_box = pygame.Rect(20, 50, 100, 30)
-    bet_button = pygame.Rect(20, 100, 100, 30)
-    color_active = pygame.Color('dodgerblue2')
-    color_inactive = pygame.Color('lightskyblue3')
-    color = color_inactive
-    active = False
-    text = ''
-    betting = False
-
-    clock = pygame.time.Clock()
-
     frame_width = window_width // 1.5
     frame_height = window_height // 1.5
     frame_x = (window_width - frame_width) // 2
@@ -136,6 +116,35 @@ def main():
     grid_x = right_panel_x + (right_panel_width - grid_width) // 2
     grid_y = right_panel_y + (panel_height - grid_height) // 2
 
+    images = load_images()
+    player_usd = load_player_usd()
+    grid = initialize_grid()
+    revealed_cells = set()
+    game_over = False
+    game_started = False
+    bet_amount = 0
+    current_multiplier = 1.0
+    cashout_value = 0
+    multiplier_displays = []
+
+    # Affichage de la fenêtre
+    screen = pygame.display.set_mode((window_width, window_height))
+    pygame.display.set_caption("Minesweeper")
+    font = pygame.font.SysFont(None, 30)
+    bet_input_box = pygame.Rect(left_panel_x + 10, left_panel_y + 50, 100, 30)
+    bet_button = pygame.Rect(left_panel_x + 10, left_panel_y + 100, 100, 30)
+    bet_button.width = 270
+    bet_button.height = 50
+    slider = Slider(screen, int(left_panel_y) + 150, int(left_panel_x) + 110, 250, 20, min=1, max=24, step=1)
+    color_active = pygame.Color('goldenrod2')
+    color_inactive = pygame.Color('white')
+    color = color_inactive
+    active = False
+    text = ''
+    betting = False
+
+    clock = pygame.time.Clock()
+
     while True:
         screen.fill(gray_dark)
 
@@ -152,20 +161,17 @@ def main():
         # Création de la grille
         create_grid(screen, grid, revealed_cells, images, grid_x, grid_y)
 
-        # Affichage du montant de la mise
-        create_text(screen, "Bet Amount:", font, white, left_panel_x + 10, left_panel_y + 20)
+        bomb_text = f"Number of Bombs: {slider.getValue()}"
 
-        # Positionnement de la boîte de saisie et du bouton de mise
-        input_box.topleft = (left_panel_x + 10, left_panel_y + 50)
-        bet_button.topleft = (left_panel_x + 10, left_panel_y + 100)
+        # ACréation de texte
+        create_text(screen, "Bet Amount:", font, white, left_panel_x + 10, left_panel_y + 20)
+        create_text(screen, bomb_text, font, white, left_panel_x + 10, left_panel_y + 200)
 
         # Texte du bouton de mise et de retrait
         bet_text = "BET" if not game_started else "CASH OUT"
         cashout_text = f"{round(cashout_value, 2):.2f} USD" if game_started else text if text else "0"
 
-        bet_button.width = 270
-        bet_button.height = 50
-        pygame.draw.rect(screen, color_active if betting else color_inactive, bet_button)
+        pygame.draw.rect(screen, "green2" if betting else "goldenrod2", bet_button)
 
         # Affichage des textes du bouton et du montant de retrait
         bet_text_width, bet_text_height = font.size(bet_text)
@@ -175,11 +181,11 @@ def main():
         create_text(screen, cashout_text, font, white, bet_button.centerx - cashout_text_width // 2, bet_button.centery + bet_text_height // 2 - 10)
 
         # Affichage du texte de mise
-        txt_surface = font.render(text, True, color)
+        txt_surface = font.render(text, True, "white")
         width = max(270, txt_surface.get_width() + 10)
-        input_box.width = width
-        screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
-        pygame.draw.rect(screen, color, input_box, 2)
+        bet_input_box.width = width
+        screen.blit(txt_surface, (bet_input_box.x + 5, bet_input_box.y + 5))
+        pygame.draw.rect(screen, color, bet_input_box, 2)
 
         # Affichage des multiplicateurs
         current_time = pygame.time.get_ticks()
@@ -215,7 +221,7 @@ def main():
             # Gestion des clics de la souris
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Gestion de la boîte de saisie pour le montant de la mise
-                if input_box.collidepoint(event.pos):
+                if bet_input_box.collidepoint(event.pos):
                     active = not active
                 else:
                     active = False 
@@ -287,7 +293,8 @@ def main():
                             cashout_value = round(bet_amount * current_multiplier, 2)
                             multiplier_displays.append(((row, col), current_multiplier, pygame.time.get_ticks()))
 
+            pygame_widgets.update(pygame.event.get())
             pygame.display.flip()
-            clock.tick(30)
+            clock.tick(60)
 
 main()
