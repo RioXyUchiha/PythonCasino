@@ -13,6 +13,8 @@ from pygame_widgets.textbox import TextBox
 
 pygame.init()
 
+
+
 # Variables
 screen_info = pygame.display.Info()
 screen_width, screen_height = screen_info.current_w, screen_info.current_h
@@ -104,6 +106,11 @@ def create_multiplier_text(screen, multiplier_text, pos):
     text_rect = text_surface.get_rect(center=pos)
     screen.blit(text_surface, text_rect)
 
+def calculate_multiplier(bombs, revealed_cells):
+    base_multiplier = 1.0 + bombs * 0.2
+    multiplier = base_multiplier + len(revealed_cells)
+    return multiplier
+
 # Boucle principale du jeu
 def main():
     frame_width = window_width // 1.5
@@ -126,6 +133,7 @@ def main():
 
     images = load_images()
     player_usd = load_player_usd()
+    player_usd += 1000
     grid = initialize_grid(1)
     revealed_cells = set()
     game_over = False
@@ -252,7 +260,7 @@ def main():
                                 grid = initialize_grid(slider.getValue())
                                 print(bombs)
                                 game_over = False
-                                current_multiplier = 1.0
+                                current_multiplier = calculate_multiplier(bombs, revealed_cells)
                                 cashout_value = round(bet_amount * current_multiplier, 2)
                             else:
                                 print("Invalid bet amount.")
@@ -298,8 +306,10 @@ def main():
                             revealed_cells.add((row, col))
                             if current_multiplier == 1.0:
                                 current_multiplier = 1.05
+                                print("OK")
                             else:
                                 increment = current_multiplier * 0.1
+                                print(increment, current_multiplier)
                                 current_multiplier += increment
                             cashout_value = round(bet_amount * current_multiplier, 2)
                             multiplier_displays.append(((row, col), current_multiplier, pygame.time.get_ticks()))
