@@ -3,6 +3,7 @@ Ce projet vise à créer un casino en Python regroupant plusieurs jeux connus, t
 
 ## Pré-requis :
 Installez Pygame dans votre terminal avec la commande : pip install pygame
+Installez Pygame Widgets dans votre terminal avec la commande : pip install pygame_widgets
 
 ## Explication des scripts :
 Serveur.py & Client.py (WIP) :
