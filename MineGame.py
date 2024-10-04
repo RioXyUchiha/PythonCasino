@@ -5,8 +5,11 @@ import sys
 import json
 import os
 import random
+import socket
+import threading
 
 from pygame_widgets.slider import Slider
+from pygame_widgets.textbox import TextBox
 
 pygame.init()
 
@@ -19,7 +22,7 @@ grid_width = grid_size * (cell_size + cell_margin) - cell_margin
 grid_height = grid_size * (cell_size + cell_margin) - cell_margin
 json_file_path = "player_data.json"
 images_dir = "Images"
-bombs = 12
+bombs = 1
 
 # Couleurs
 white = pygame.Color('white')
@@ -58,14 +61,17 @@ def save_player_usd(usd):
         print(f"Error saving JSON: {e}")
 
 # Initialisation de la grille de jeu
-def initialize_grid():
+def initialize_grid(number_of_bombs):
+    global bombs
+    bombs = number_of_bombs
     grid = [[0] * grid_size for _ in range(grid_size)]
     for _ in range(bombs):
         bomb_pos = (random.randint(0, grid_size - 1), random.randint(0, grid_size - 1))
-        while grid[bomb_pos[0]][bomb_pos[1]] != -1:
-            grid[bomb_pos[0]][bomb_pos[1]] = -1  # Placement d'une bombe
+        while grid[bomb_pos[0]][bomb_pos[1]] != 0:
+            print(grid[bomb_pos[0]][bomb_pos[1]])
             bomb_pos = (random.randint(0, grid_size - 1), random.randint(0, grid_size - 1))
-    
+        grid[bomb_pos[0]][bomb_pos[1]] = -1  # Placement d'une bombe
+
     return grid
 
 # Création de la grille
@@ -120,7 +126,7 @@ def main():
 
     images = load_images()
     player_usd = load_player_usd()
-    grid = initialize_grid()
+    grid = initialize_grid(1)
     revealed_cells = set()
     game_over = False
     game_started = False
@@ -138,6 +144,7 @@ def main():
     bet_button.width = 270
     bet_button.height = 50
     slider = Slider(screen, int(left_panel_y) + 150, int(left_panel_x) + 110, 250, 20, min=1, max=24, step=1)
+    slider.setValue(1)
     color_active = pygame.Color('goldenrod2')
     color_inactive = pygame.Color('white')
     color = color_inactive
@@ -183,10 +190,10 @@ def main():
         create_text(screen, cashout_text, font, white, bet_button.centerx - cashout_text_width // 2, bet_button.centery + bet_text_height // 2 - 10)
 
         # Affichage du texte de mise
-        txt_surface = font.render(text, True, "white")
-        width = max(270, txt_surface.get_width() + 10)
+        text_bet_surface = font.render(text, True, "white")
+        width = max(270, text_bet_surface.get_width() + 10)
         bet_input_box.width = width
-        screen.blit(txt_surface, (bet_input_box.x + 5, bet_input_box.y + 5))
+        screen.blit(text_bet_surface, (bet_input_box.x + 5, bet_input_box.y + 5))
         pygame.draw.rect(screen, color, bet_input_box, 2)
 
         # Affichage des multiplicateurs
@@ -202,7 +209,8 @@ def main():
 
         # Vérification de la fin de la partie
         if game_started:
-            all_non_bomb_cells_revealed = len(revealed_cells) == (grid_size * grid_size - 1)
+            all_non_bomb_cells_revealed = len(revealed_cells) == (grid_size * grid_size - bombs)
+            # print(all_non_bomb_cells_revealed, bombs)
             if all_non_bomb_cells_revealed:
                 revealed_cells = {(r, c) for r in range(grid_size) for c in range(grid_size)}
                 player_usd += cashout_value
@@ -241,7 +249,8 @@ def main():
                                 game_started = True
                                 betting = True
                                 revealed_cells.clear()
-                                grid = initialize_grid()
+                                grid = initialize_grid(slider.getValue())
+                                print(bombs)
                                 game_over = False
                                 current_multiplier = 1.0
                                 cashout_value = round(bet_amount * current_multiplier, 2)
