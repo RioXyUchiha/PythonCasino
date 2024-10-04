@@ -8,6 +8,7 @@ Installez Pygame Widgets dans votre terminal avec la commande : pip install pyga
 ## Explication des scripts :
 Serveur.py & Client.py (WIP) :
 Ces scripts servent de test pour la communication entre plusieurs ordinateurs (clients). Cela permettra de jouer à plusieurs en même temps au Blackjack sur des machines différentes, ainsi qu’un système de chat pour que les joueurs puissent communiquer entre eux.
+Lancer seulement MineGame.py et server/client si vous êtes plusieurs
 
 ### Tests.py :
 Ce script permet de tester des fonctionnalités avant de les intégrer aux vrais scripts afin d’éviter de faire buguer le casino. C'est pourquoi il ne fonctionne pas la plupart du temps.
