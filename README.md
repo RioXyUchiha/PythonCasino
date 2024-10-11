@@ -27,3 +27,8 @@ Le but du jeu est de parier une somme d'argent prédéfinie par le jeu, puis de 
 
 ## Jeu du Crash
 Ce jeu consiste à parier la somme que vous voulez avant que la fusée décolle, ensuite la fusée décollera après un certain temps laissant le temps aux joueurs de parier. Quand la fusée aura finalement décollé, le multiplicateur augmentera de façon exponentielle, mais attention à vous retirer avant que la fusée ne s'écrase, sinon vous perdrez tout. Si vous vous retirez avant qu'elle ne s'écrase, vous gagnerez la somme que vous avez pariée avec le multiplicateur appliqué dessus.
+
+## Sources
+https://github.com/anderskm/gputil
+https://realpython.com/python-sockets/
+https://stackoverflow.com/questions/73673458/how-to-get-accurate-process-cpu-and-memory-usage-with-python
