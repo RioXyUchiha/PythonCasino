@@ -5,15 +5,11 @@ import sys
 import json
 import os
 import random
-import socket
-import threading
-
+from chat_manager import ChatManager
 from pygame_widgets.slider import Slider
 from pygame_widgets.textbox import TextBox
 
 pygame.init()
-
-
 
 # Variables
 screen_info = pygame.display.Info()
@@ -106,13 +102,10 @@ def create_multiplier_text(screen, multiplier_text, pos):
     text_rect = text_surface.get_rect(center=pos)
     screen.blit(text_surface, text_rect)
 
-def calculate_multiplier(bombs, revealed_cells):
-    base_multiplier = 1.0 + bombs * 0.2
-    multiplier = base_multiplier + len(revealed_cells)
-    return multiplier
-
 # Boucle principale du jeu
 def main():
+    global paused
+
     frame_width = window_width // 1.5
     frame_height = window_height // 1.5
     frame_x = (window_width - frame_width) // 2
@@ -128,12 +121,11 @@ def main():
     right_panel_x = left_panel_x + left_panel_width + separation
     right_panel_y = frame_y
 
-    grid_x = right_panel_x + (right_panel_width - grid_width) // 2
+    grid_x = right_panel_x + (right_panel_width - grid_width) // 2 + 100
     grid_y = right_panel_y + (panel_height - grid_height) // 2
 
     images = load_images()
     player_usd = load_player_usd()
-    player_usd += 1000
     grid = initialize_grid(1)
     revealed_cells = set()
     game_over = False
@@ -146,12 +138,13 @@ def main():
     # Affichage de la fenêtre
     screen = pygame.display.set_mode((window_width, window_height))
     pygame.display.set_caption("Minesweeper")
+    chat_manager = ChatManager(surface=screen, width=window_width, height=window_height)
     font = pygame.font.SysFont(None, 30)
-    bet_input_box = pygame.Rect(left_panel_x + 10, left_panel_y + 50, 100, 30)
-    bet_button = pygame.Rect(left_panel_x + 10, left_panel_y + 100, 100, 30)
-    bet_button.width = 270
+    bet_input_box = pygame.Rect(left_panel_x + 110, left_panel_y + 50, 100, 30)
+    bet_button = pygame.Rect(left_panel_x + 110, left_panel_y + 100, 100, 30)
+    bet_button.width = 270 
     bet_button.height = 50
-    slider = Slider(screen, int(left_panel_y) + 150, int(left_panel_x) + 110, 250, 20, min=1, max=24, step=1)
+    slider = Slider(screen, int(left_panel_y) + 250, int(left_panel_x) + 110, 250, 20, min=1, max=24, step=1)
     slider.setValue(1)
     color_active = pygame.Color('goldenrod2')
     color_inactive = pygame.Color('white')
@@ -159,15 +152,14 @@ def main():
     active = False
     text = ''
     betting = False
-
     clock = pygame.time.Clock()
 
     while True:
         screen.fill(gray_dark)
 
         # Création des rectangles gauche et droite
-        pygame.draw.rect(screen, gray, (left_panel_x, left_panel_y, left_panel_width, panel_height))
-        pygame.draw.rect(screen, gray, (right_panel_x, right_panel_y, right_panel_width, panel_height))
+        pygame.draw.rect(screen, gray, (left_panel_x + 100, left_panel_y, left_panel_width, panel_height))
+        pygame.draw.rect(screen, gray, (right_panel_x + 100, right_panel_y, right_panel_width, panel_height))
 
         # Affichage de l'argent du joueur
         player_usd_text = f"{round(player_usd, 2):.2f} USD"
@@ -181,8 +173,8 @@ def main():
         bomb_text = f"Number of Bombs: {slider.getValue()}"
 
         # ACréation de texte
-        create_text(screen, "Bet Amount:", font, white, left_panel_x + 10, left_panel_y + 20)
-        create_text(screen, bomb_text, font, white, left_panel_x + 10, left_panel_y + 200)
+        create_text(screen, "Bet Amount:", font, white, left_panel_x + 110, left_panel_y + 20)
+        create_text(screen, bomb_text, font, white, left_panel_x + 110, left_panel_y + 200)
 
         # Texte du bouton de mise et de retrait
         bet_text = "BET" if not game_started else "CASH OUT"
@@ -235,6 +227,8 @@ def main():
                 save_player_usd(player_usd)
                 pygame.quit()
                 sys.exit()
+
+            chat_manager.handle_event(event)
             
             # Gestion des clics de la souris
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -260,7 +254,7 @@ def main():
                                 grid = initialize_grid(slider.getValue())
                                 print(bombs)
                                 game_over = False
-                                current_multiplier = calculate_multiplier(bombs, revealed_cells)
+                                current_multiplier = 1.0
                                 cashout_value = round(bet_amount * current_multiplier, 2)
                             else:
                                 print("Invalid bet amount.")
@@ -306,14 +300,14 @@ def main():
                             revealed_cells.add((row, col))
                             if current_multiplier == 1.0:
                                 current_multiplier = 1.05
-                                print("OK")
                             else:
                                 increment = current_multiplier * 0.1
-                                print(increment, current_multiplier)
                                 current_multiplier += increment
                             cashout_value = round(bet_amount * current_multiplier, 2)
                             multiplier_displays.append(((row, col), current_multiplier, pygame.time.get_ticks()))
 
+            chat_manager.update()
+            chat_manager.draw()
             pygame_widgets.update(pygame.event.get())
             pygame.display.flip()
             clock.tick(60)
