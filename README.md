@@ -6,8 +6,9 @@ Installez Pygame dans votre terminal avec la commande : pip install pygame
 Installez Pygame Widgets dans votre terminal avec la commande : pip install pygame_widgets
 Installez MySql connector dans votre terminal avec la commande : pip install mysql-connector-python
 Mettez la taille de votre écran à 100 % pour éviter tout bug d'affichage
+Activez MySql et ouvrez HeidiSql pour la partie login.
 
-## Pré-requis :
+## Pour commencer :
 Tout d'abord, lancez le script MineGame.py, puis dans l'output de Visual Studio Code ou PyCharm, écrivez votre username. Ensuite, vous pourrez jouer aux jeux de mine.
 
 ## Explication des scripts :
