@@ -7,6 +7,9 @@ Installez Pygame Widgets dans votre terminal avec la commande : pip install pyga
 Installez MySql connector dans votre terminal avec la commande : pip install mysql-connector-python
 Mettez la taille de votre écran à 100 % pour éviter tout bug d'affichage
 
+## Pré-requis :
+Tout d'abord, lancez le script MineGame.py, puis dans l'output de Visual Studio Code ou PyCharm, écrivez votre username. Ensuite, vous pourrez jouer aux jeux de mine.
+
 ## Explication des scripts :
 Serveur.py & Client.py (WIP) :
 Ces scripts servent de test pour la communication entre plusieurs ordinateurs (clients). Cela permettra de jouer à plusieurs en même temps au Blackjack sur des machines différentes, ainsi qu’un système de chat pour que les joueurs puissent communiquer entre eux.
