@@ -12,15 +12,20 @@ Activez MySql et ouvrez HeidiSql pour la partie login.
 Tout d'abord, lancez le script MineGame.py, puis dans l'output de Visual Studio Code ou PyCharm, écrivez votre username. Ensuite, vous pourrez jouer aux jeux de mine.
 
 ## Explication des scripts :
-Serveur.py & Client.py (WIP) :
-Ces scripts servent de test pour la communication entre plusieurs ordinateurs (clients). Cela permettra de jouer à plusieurs en même temps au Blackjack sur des machines différentes, ainsi qu’un système de chat pour que les joueurs puissent communiquer entre eux.
-Lancer seulement MineGame.py et server/client si vous êtes plusieurs
+### chat_manager.py :
+Ce script va gérer toute la partie du chat du côter client que ce soit graphique ou autre chose.
+
+### Server.py :
+Ce script va gérer toute la partie du chat du côter serveur pour que chaque joueur vois le message des autres.
 
 ### Tests.py :
 Ce script permet de tester des fonctionnalités avant de les intégrer aux vrais scripts afin d’éviter de faire buguer le casino. C'est pourquoi il ne fonctionne pas la plupart du temps.
 
 ### player_data.json :
 Ce fichier stocke l'argent du joueur, mais il sera remplacé dans le futur par une base de données qui contiendra bien plus d’informations.
+
+### Login & Database (WIP) :
+Ces scripts permettent au joueur de ce connecter ou de créer un compte.
 
 ### MineGame.py :
 Gère toute la partie du jeu des Mines.
